@@ -1,6 +1,7 @@
 import styled from "@emotion/styled";
 import {useState} from "react";
-
+import {obtenerDiferenciaYear, calcularMarca, obtenerPlan} from "../helper";
+import PropTypes from "prop-types";
 const Campo = styled.div`
   display: flex;
   margin-bottom: 1rem;
@@ -50,7 +51,7 @@ const Error = styled.div`
   margin-bottom: 2rem;
 `;
 
-const Formulario = () => {
+const Formulario = ({guardarResumen, guardarCargando}) => {
   const [datos, setDatos] = useState({
     marca: "",
     year: "",
@@ -63,72 +64,82 @@ const Formulario = () => {
     setDatos({
       ...datos,
       [e.target.name]: e.target.value,
-    })
-  }
+    });
+  };
 
   const cotizarSeguro = e => {
     e.preventDefault();
-    if(marca.trim() ==='' || year.trim() === ''  || plan===''){
+    if (marca.trim() === "" || year.trim() === "" || plan.trim() === "") {
       setError(true);
     } else {
       setError(false);
+      let resultado = 2000;
+      const diferencia = obtenerDiferenciaYear(year);
+      resultado -= ((diferencia * 3) * resultado) / 100;
+      resultado = calcularMarca(marca) * resultado;
+      const incrementoPlan = obtenerPlan(plan);
+      resultado = parseFloat(incrementoPlan * resultado).toFixed(2);
+
+      guardarCargando(true);
+
+      setTimeout(() => {
+        guardarCargando(false);
+        guardarResumen({
+          cotizacion: Number(resultado),
+          datos
+        })
+      }, 3000)
+
     }
   };
 
   return (
     <form onSubmit={cotizarSeguro}>
-      {error ? <Error>Todos los campos son obligatorios</Error> : null}
-      <Campo> <Label>Marca</Label>
-        <Select
-          name="marca"
-          value={marca}
-          onChange={obtenerInformacion}
-        >
-          <option value="">--Seleccione--</option>
-          <option value="americano">Americano</option>
-          <option value="europeo">Europeo</option>
-          <option value="asiatico">Asiatico</option>
-        </Select>
-      </Campo>
-      <Campo>
-        <Label>Año</Label>
-        <Select
-          name="year"
-          value={year}
-          onChange={obtenerInformacion}
-        >
-          <option value="">-- Seleccione --</option>
-          <option value="2021">2021</option>
-          <option value="2020">2020</option>
-          <option value="2019">2019</option>
-          <option value="2018">2018</option>
-          <option value="2017">2017</option>
-          <option value="2016">2016</option>
-          <option value="2015">2015</option>
-          <option value="2014">2014</option>
-          <option value="2013">2013</option>
-          <option value="2012">2012</option>
-        </Select>
-      </Campo>
-      <Campo>
-        <Label>Plan</Label>
-        <InputRadio type="radio"
-          name="plan"
-          value="basico"
-          checked={plan === "basico"}
-          onChange={obtenerInformacion}
+      {error ? <Error>Todos los campos son obligatorios</Error> : null} <Campo> <Label>Marca</Label>
+      <Select
+        name="marca"
+        value={marca}
+        onChange={obtenerInformacion}
+      >
+        <option value="">--Seleccione--</option>
+        <option value="americano">Americano</option>
+        <option value="europeo">Europeo</option>
+        <option value="asiatico">Asiatico</option>
+      </Select> </Campo> <Campo> <Label>Año</Label> <Select
+      name="year"
+      value={year}
+      onChange={obtenerInformacion}
+    >
+      <option value="">-- Seleccione --</option>
+      <option value="2021">2022</option>
+      <option value="2021">2021</option>
+      <option value="2020">2020</option>
+      <option value="2019">2019</option>
+      <option value="2018">2018</option>
+      <option value="2017">2017</option>
+      <option value="2016">2016</option>
+      <option value="2015">2015</option>
+      <option value="2014">2014</option>
+      <option value="2013">2013</option>
+      <option value="2012">2012</option>
+    </Select> </Campo> <Campo> <Label>Plan</Label> <InputRadio type="radio"
+      name="plan"
+      value="basico"
+      checked={plan === "basico"}
+      onChange={obtenerInformacion}
 
-        /> Básico
-        <InputRadio type="radio"
-          name="plan"
-          value="completo"
-          checked={plan === "completo"}
-          onChange={obtenerInformacion}
-        /> Completo
-      </Campo>
-      <Boton type="submit">Cotizar</Boton>
+    /> Básico <InputRadio type="radio"
+      name="plan"
+      value="completo"
+      checked={plan === "completo"}
+      onChange={obtenerInformacion}
+    /> Completo </Campo> <Boton type="submit">Cotizar</Boton>
     </form>
   );
 };
 
+Formulario.prototype = {
+  guardarResumen: PropTypes.func.isRequired,
+  guardarCargando: PropTypes.func.isRequired
+}
 export default Formulario;
